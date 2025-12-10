@@ -119,5 +119,4 @@ This tool is designed for **Passive Intelligence Collection**.
 
 *This project is for educational and defensive research purposes only. The author is not responsible for any misuse of the information or code provided herein. Scraping data from the dark web carries inherent risks; ensure you comply with all local laws and terms of service.*
 
-```
-```
+
