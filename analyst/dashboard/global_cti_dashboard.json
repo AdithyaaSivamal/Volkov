@@ -1,0 +1,886 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "af5wrbviv6zgge"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "src_lat {asn=\"None\", gang=\"nightspire\", geo_country=\"None\", hosting_provider=\"None\", language_barrier=\"False\", org_type=\"Private Sector\", source_channel=\"venarix\", victim_sector=\"Other/Unknown\"}"
+          }
+        ]
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "hide": false,
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  // Filter for raw_text AND victims field\n  |> filter(fn: (r) => r[\"_field\"] == \"raw_text\" or r[\"_field\"] == \"victims\")\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group()\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 100)\n  // Map columns for the table\n  |> map(fn: (r) => ({\n      Time: r._time,\n      Source: r.source_channel,\n      Gang: r.gang,\n      Victim: r.victims, \n      Message: r.raw_text\n  }))\n  |> keep(columns: [\"Time\", \"Source\", \"Gang\", \"Victim\", \"Message\"])",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "af5wrbviv6zgge"
+          },
+          "hide": true,
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  |> filter(fn: (r) => r[\"_field\"] == \"victim_count\")\n  // Only show rows that actually have a victim name\n  |> filter(fn: (r) => exists r.victims) \n  |> group()\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 50)\n  |> map(fn: (r) => ({\n      Time: r._time,\n      Attacker: r.gang,\n      Victim: r.victims,\n      \"Victim Sector\": r.victim_sector,\n      \"Source\": r.source_channel\n  }))\n  |> keep(columns: [\"Time\", \"Attacker\", \"Victim\", \"Victim Sector\", \"Source\"])",
+          "refId": "B"
+        }
+      ],
+      "title": "New panel",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Message": true
+            },
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXDB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "displayName": "${__field.labels.gang}",
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "sort": "desc",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  |> filter(fn: (r) => r[\"_field\"] == \"victim_count\")\n  |> group(columns: [\"gang\"])\n  |> sum()",
+          "refId": "A"
+        }
+      ],
+      "title": "Threat Actor Attribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "af5wrbviv6zgge"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 70,
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "displayName": "${__field.labels.target_url}",
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "dark-red",
+                  "index": 0,
+                  "text": "OFFLINE"
+                },
+                "1": {
+                  "color": "dark-green",
+                  "index": 1,
+                  "text": "ONLINE"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 7,
+      "options": {
+        "alignValue": "left",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "mergeValues": true,
+        "rowHeight": 0.9,
+        "showValue": "auto",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"infrastructure_health\")\n  |> filter(fn: (r) => r[\"_field\"] == \"status_code\")\n  // Change createEmpty to true so we generate time slots even if no scrape happened\n  |> aggregateWindow(every: v.windowPeriod, fn: last, createEmpty: true)\n  // CRITICAL FIX: Fill the empty slots with the previous known value\n  |> fill(usePrevious: true)\n  |> duplicate(column: \"_time\", as: \"time\")\n  |> yield(name: \"status\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Source Health/Uptime",
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "af5wrbviv6zgge"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Gang"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 289
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "frameIndex": 1,
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: -30d) // Look back further for these rare events\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  |> filter(fn: (r) => r[\"_field\"] == \"raw_text\")\n  // CRITICAL FILTER: Only show items where language barrier is True\n  |> filter(fn: (r) => r[\"language_barrier\"] == \"True\") \n  |> group()\n  |> sort(columns: [\"_time\"], desc: true)\n  |> map(fn: (r) => ({\n      Time: r._time,\n      Gang: r.gang,\n      \"Original Text\": r._value\n  }))\n  |> keep(columns: [\"Time\", \"Gang\", \"Original Text\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Untranslated Intelligence Feed",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {
+              "Gang": 1,
+              "Original Text": 2,
+              "Time": 0
+            },
+            "orderBy": [],
+            "orderByMode": "manual",
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "af5wrbviv6zgge"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "log": 2,
+              "type": "symlog"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "Total Victims",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "timezone": [
+          "America/Chicago"
+        ],
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "hide": true,
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  |> filter(fn: (r) => r[\"_field\"] == \"victim_count\")\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\n  |> yield(name: \"sum\")",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "af5wrbviv6zgge"
+          },
+          "hide": false,
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  |> filter(fn: (r) => r[\"_field\"] == \"victim_count\")\n  |> group()\n  // -------------------------------------------------------------\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\n  |> yield(name: \"Total Victims\")",
+          "refId": "B"
+        }
+      ],
+      "title": "Global Victim Volume",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "af5wrbviv6zgge"
+      },
+      "description": "Live raw data feed",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  |> filter(fn: (r) => r[\"_field\"] == \"raw_text\")\n  |> group() // Merge all streams\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 100)\n  |> map(fn: (r) => ({\n      Time: r._time,\n      Source: r.source_channel,\n      Gang: r.gang,\n      Message: r._value\n  }))\n  |> keep(columns: [\"Time\", \"Source\", \"Gang\", \"Message\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Live Wire",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {}
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "af5wrbviv6zgge"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 3,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "hide": true,
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"target_discovery\")\n  |> filter(fn: (r) => r[\"_field\"] == \"discovered_target\")\n  // 1. Reset any default groupings (like source tags)\n  |> group()\n  // 2. Duplicate the username into a new column called \"TargetName\"\n  // This leaves \"_value\" available for the math function\n  |> duplicate(column: \"_value\", as: \"TargetName\")\n  // 3. Group by the NEW column\n  |> group(columns: [\"TargetName\"])\n  // 4. Count the rows (this consumes the _value column)\n  |> count()\n  // 5. Ungroup to flatten into a table\n  |> group()\n  // 6. Rename the result column for clarity\n  |> rename(columns: {_value: \"Mentions\"})\n  // 7. Clean up columns\n  |> keep(columns: [\"TargetName\", \"Mentions\"])\n  // 8. Sort highest to lowest\n  |> sort(columns: [\"Mentions\"], desc: true)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "af5wrbviv6zgge"
+          },
+          "hide": false,
+          "query": "from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"target_discovery\")\n  |> filter(fn: (r) => r[\"lead_type\"] == \"vulnerability\" or r[\"lead_type\"] == \"dark_web_url\" or r[\"lead_type\"] == \"clear_web_url\")\n  |> filter(fn: (r) => r[\"_field\"] == \"discovered_target\")\n\n  // Count frequency (Hotness)\n  |> duplicate(column: \"_value\", as: \"Artifact\")\n  |> group(columns: [\"Artifact\", \"lead_type\"])\n  |> count()\n  |> group()\n\n  |> rename(columns: {_value: \"Mentions\", lead_type: \"Type\"})\n  |> keep(columns: [\"Type\", \"Artifact\", \"Mentions\"])\n  |> sort(columns: [\"Mentions\"], desc: true)",
+          "refId": "B"
+        }
+      ],
+      "title": "SNOWBALL: Automated Target Discovery",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "af5wrbviv6zgge"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 4,
+      "options": {
+        "basemap": {
+          "config": {},
+          "name": "Layer 0",
+          "noRepeat": false,
+          "type": "default"
+        },
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": false,
+          "showZoom": true
+        },
+        "layers": [
+          {
+            "config": {
+              "arrow": 1,
+              "style": {
+                "color": {
+                  "fixed": "super-light-red"
+                },
+                "lineWidth": 2,
+                "opacity": 1,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "fixed": 2,
+                  "max": 15,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "text": {
+                  "field": "gang",
+                  "fixed": "",
+                  "mode": "field"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "seriesToRows-B"
+            },
+            "location": {
+              "latitude": "latitude",
+              "longitude": "longitude",
+              "mode": "coords"
+            },
+            "name": "Layer 2",
+            "opacity": 1,
+            "tooltip": true,
+            "type": "route"
+          },
+          {
+            "config": {
+              "showLegend": true,
+              "style": {
+                "color": {
+                  "fixed": "dark-red"
+                },
+                "opacity": 1,
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                },
+                "size": {
+                  "fixed": 5,
+                  "max": 15,
+                  "min": 2
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              }
+            },
+            "filterData": {
+              "id": "byRefId",
+              "options": "seriesToRows-B"
+            },
+            "location": {
+              "latitude": "latitude",
+              "longitude": "longitude",
+              "mode": "coords"
+            },
+            "name": "Layer 4",
+            "tooltip": true,
+            "type": "markers"
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "zero",
+          "lat": 0,
+          "lon": 0,
+          "noRepeat": false,
+          "zoom": 1
+        }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "hide": false,
+          "query": "import \"experimental\"\n\n// 1. Get Base Data\nbaseData = from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  // Filter for both Coordinates (Float) and Victims (String)\n  |> filter(fn: (r) => r[\"_field\"] == \"src_lat\" or r[\"_field\"] == \"src_lon\" or r[\"_field\"] == \"dst_lat\" or r[\"_field\"] == \"dst_lon\" or r[\"_field\"] == \"victims\")\n  // --- FIX: Convert EVERYTHING to String first to avoid type conflict ---\n  |> map(fn: (r) => ({ r with _value: string(v: r._value) }))\n  // ---------------------------------------------------------------------\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  // Filter for rows that have a destination (Target)\n  |> filter(fn: (r) => exists r.dst_lat and exists r.dst_lon)\n  |> map(fn: (r) => ({r with trace_id: r.gang + \"_\" + string(v: r._time)}))\n\n// 2. Format Source Points (Attacker)\nsources = baseData\n  |> map(fn: (r) => ({\n      _time: r._time,\n      trace_id: r.trace_id,\n      gang: r.gang,\n      Victim: r.victims,\n      // --- CONVERT BACK TO FLOAT FOR GRAFANA ---\n      latitude: float(v: r.src_lat),\n      longitude: float(v: r.src_lon),\n      point_type: \"Attacker\"\n  }))\n\n// 3. Format Destination Points (Victim)\ndestinations = baseData\n  |> map(fn: (r) => ({\n      _time: experimental.addDuration(d: 1s, to: r._time),\n      trace_id: r.trace_id,\n      gang: r.gang,\n      Victim: r.victims,\n      // --- CONVERT BACK TO FLOAT FOR GRAFANA ---\n      latitude: float(v: r.dst_lat),\n      longitude: float(v: r.dst_lon),\n      point_type: \"Victim\"\n  }))\n\n// 4. Union & Group\nunion(tables: [sources, destinations])\n  |> group(columns: [\"trace_id\"])\n  |> sort(columns: [\"_time\"], desc: false)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "af5wrbviv6zgge"
+          },
+          "hide": true,
+          "query": "import \"experimental\"\n\n// 1. Get Base Data\nbaseData = from(bucket: \"ransomware_tracker\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"attack_intel\")\n  |> filter(fn: (r) => r[\"_field\"] == \"src_lat\" or r[\"_field\"] == \"src_lon\" or r[\"_field\"] == \"dst_lat\" or r[\"_field\"] == \"dst_lon\")\n  // Force Float to prevent schema errors\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) }))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  // Only keep rows where we found the location\n  |> filter(fn: (r) => exists r.src_lat and exists r.src_lon and exists r.dst_lat and exists r.dst_lon)\n  // Create the ID that links Source to Dest\n  |> map(fn: (r) => ({r with trace_id: r.gang + \"_\" + string(v: r._time)}))\n\n// 2. Format Source Points (Attacker)\nsources = baseData\n  |> map(fn: (r) => ({\n      _time: r._time,\n      trace_id: r.trace_id,\n      gang: r.gang,\n      latitude: r.src_lat,\n      longitude: r.src_lon,\n      point_type: \"Attacker\"\n  }))\n\n// 3. Format Destination Points (Victim)\n// Add 1s so it draws AFTER the source\ndestinations = baseData\n  |> map(fn: (r) => ({\n      _time: experimental.addDuration(d: 1s, to: r._time),\n      trace_id: r.trace_id,\n      gang: r.gang,\n      latitude: r.dst_lat,\n      longitude: r.dst_lon,\n      point_type: \"Victim\"\n  }))\n\n// 4. Union & Group\nunion(tables: [sources, destinations])\n  // Group by Trace ID so Grafana sees each attack as a separate line\n  |> group(columns: [\"trace_id\"])\n  // Sort Time Ascending (Source -> Dest)\n  |> sort(columns: [\"_time\"], desc: false)",
+          "refId": "B"
+        }
+      ],
+      "title": "Threat Map",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "disabled": true,
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "gang sinobi_2025-12-07T14:32:17.000000000Z": true,
+              "latitude sinobi_2025-12-07T14:32:17.000000000Z": true,
+              "longitude sinobi_2025-12-07T14:32:17.000000000Z": true,
+              "trace_id": true
+            },
+            "includeByName": {},
+            "indexByName": {},
+            "orderByMode": "manual",
+            "renameByName": {
+              "_time": "time",
+              "gang nightspire_2025-12-07T17:35:43.000000000Z": "gang",
+              "latitude nightspire_2025-12-07T17:35:43.000000000Z": "lat",
+              "longitude nightspire_2025-12-07T17:35:43.000000000Z": "lon"
+            }
+          }
+        }
+      ],
+      "type": "geomap"
+    }
+  ],
+  "preload": false,
+  "refresh": "5s",
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "influxdb",
+          "value": "af5wrbviv6zgge"
+        },
+        "label": "InfluxDB",
+        "name": "DS_INFLUXDB",
+        "options": [],
+        "query": "influxdb",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": [
+            "LockBit3"
+          ],
+          "value": [
+            "LockBit3"
+          ]
+        },
+        "definition": "import \"influxdata/influxdb/schema\" schema.tagValues(bucket: \"ransomware_tracker\", tag: \"gang\")",
+        "includeAll": true,
+        "multi": true,
+        "name": "search_group",
+        "options": [],
+        "query": {
+          "query": "import \"influxdata/influxdb/schema\" schema.tagValues(bucket: \"ransomware_tracker\", tag: \"gang\")"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "definition": "schema.tagValues(bucket: \"ransomware_tracker\", tag: \"victim_sector\")",
+        "description": "e.g., finance, health, retail, etc",
+        "name": "search_sector",
+        "options": [],
+        "query": {
+          "query": "schema.tagValues(bucket: \"ransomware_tracker\", tag: \"victim_sector\")"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Volkov CTI Commander",
+  "uid": "cdz3n",
+  "version": 24
+}
