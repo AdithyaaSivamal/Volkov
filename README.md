@@ -1,8 +1,6 @@
 
 # VOLKOV: Autonomous CTI Pipeline
 
-![Status](https://img.shields.io/badge/Status-Operational-brightgreen)
-![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![Infrastructure](https://img.shields.io/badge/Infra-Terraform-purple)
 ![License](https://img.shields.io/badge/License-MIT-green)
