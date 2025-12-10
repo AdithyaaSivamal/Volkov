@@ -1,0 +1,4 @@
+# Rename this file to terraform.tfvars and fill in your values
+do_token     = "dop_v1_your_token_here"
+pvt_key_path = "../volkov_key.pub"
+region       = "ams3"
