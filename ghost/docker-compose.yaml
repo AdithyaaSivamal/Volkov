@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  ghost_scraper:
+    build: .
+    container_name: volkov_ghost
+    restart: unless-stopped
+    
+    volumes:
+      # 1. The Local Buffer (Where the JSON intel lands)
+      #- ./volkov_local_buffer:/app/volkov_local_buffer
+      - ./volkov_data:/app/data
+      
+      # 2. The Discovery Log (Persistence for the Snowball/Hunter module)
+      - ./volkov_discovery_log.json:/app/volkov_discovery_log.json
+      
+      # 3. The Session File (YOUR IDENTITY - Critical)
+      - ./volkov_session.session:/app/volkov_session.session
+
+      # 4. Rclone Config (Future Use - Commented out for Local Test)
+      # If you re-enable this later, note the new username 'volkov_op' path:
+      # - ~/.config/rclone/rclone.conf:/home/volkov_op/.config/rclone/rclone.conf:ro
+
+    # SECRETS: Pass API keys from your .env file into the container
+    environment:
+      - TG_API_ID=${TG_API_ID}
+      - TG_API_HASH=${TG_API_HASH}
+      - TG_PHONE=${TG_PHONE}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - S3_BUCKET=${S3_BUCKET}
+      - TOR_PROXY_URL=socks5h://tor_proxy:9050
+      - PYTHONUNBUFFERED=1
+      
+  # .onion scraper    
+  tor_proxy:
+    image: osminogin/tor-simple
+    container_name: volkov_tor
+    restart: always
+    ports:
+      - "127.0.0.1:9050:9050" # Expose only to localhost for debugging
