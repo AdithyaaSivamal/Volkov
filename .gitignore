@@ -1,0 +1,22 @@
+# Secrets
+.env
+*.session
+*.session-journal
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Data Buffers (Don't commit scraped data)
+volkov_local_buffer/
+*.json
+volkov_discovery_log.json
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# tfvars
+*.tfvars
