@@ -19,7 +19,7 @@ It uses a **Store-and-Forward** architecture to maintain a strict air gap betwee
 
 The system is split into three isolated zones to prevent attribution and lateral movement from threat actors.
 
-![System Architecture](docs/images/volkov_architecture.png)
+![docs/architecture.md](docs/architecture.md)
 *(See `docs/architecture.md` for detailed network diagrams)*
 
 ### 1. The Ghost (Collection Node)
