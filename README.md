@@ -7,9 +7,13 @@
 
 **Volkov** is an autonomous, air-gapped Cyber Threat Intelligence (CTI) pipeline designed to monitor, attribute, and visualize global and Russia-specific cyber threats.
 
-It leverages a **Store-and-Forward** architecture to maintain a strict air gap between the collection infrastructure (The Ghost) and the analysis environment (The Analyst). The system aggregates intelligence from Tor leak sites, Telegram channels, and C2 feeds into a unified visualization suite.
+It uses a **Store-and-Forward** architecture to maintain a strict air gap between the collection infrastructure (The Ghost) and the analysis environment (The Analyst). The system aggregates intelligence from Tor leak sites, Telegram channels, and C2 feeds into a unified visualization suite.
 
 ---
+<img width="1900" height="831" alt="image" src="https://github.com/user-attachments/assets/33c11241-7dbc-4ed4-82f7-ec47666141fe" />
+<br>
+<br>
+<img width="1884" height="768" alt="image" src="https://github.com/user-attachments/assets/9d0b6342-5727-48b5-9a7f-5a8d3c53ab7d" />
 
 ## 🏗️ Architecture
 
@@ -38,6 +42,8 @@ The system is split into three isolated zones to prevent attribution and lateral
     * **Geospatial:** Converts C2 IPs and Victim HQs into physical coordinates (Nominatim/IPWhois).
     * **Firmographics:** Classifies victims by Sector (Finance, Gov, Health) and Org Type.
     * **TTP Analysis:** Extracts MITRE ATT&CK techniques from unstructured text.
+
+<img width="1613" height="290" alt="image" src="https://github.com/user-attachments/assets/b950ebd7-0be5-42c2-943a-9d68f76d0705" />
 
 ---
 
