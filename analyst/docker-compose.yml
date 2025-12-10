@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # 1. THE DATABASE (InfluxDB)
+  influxdb:
+    image: influxdb:2
+    container_name: volkov_db
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    environment:
+      # Auto-initialization (So you don't have to click through a wizard)
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=volkov_admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=volkov_secret_password
+      - DOCKER_INFLUXDB_INIT_ORG=volkov_intel
+      - DOCKER_INFLUXDB_INIT_BUCKET=ransomware_tracker
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+
+  # 2. THE DASHBOARD (Grafana)
+  grafana:
+    image: grafana/grafana-oss
+    container_name: volkov_dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - influxdb
+
+volumes:
+  influxdb_data:
+  grafana_data:
