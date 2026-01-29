@@ -1,4 +1,4 @@
-# README.md  
+# Volkov: Air-Gapped Cyber Threat Intelligence Pipeline  
 A high-level introduction to **Volkov**, an air-gapped Cyber Threat Intelligence (CTI) pipeline. It outlines the system’s goals, architecture, and component roles without diving into configuration details.  
 
 ## Overview  
